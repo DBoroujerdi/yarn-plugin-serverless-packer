@@ -1,0 +1,15 @@
+{
+  "name": "yarn-plugin-serverless-packer",
+  "main": "./sources/index.ts",
+  "dependencies": {
+    "@types/node": "^12.0.0",
+    "@yarnpkg/builder": "^2.1.2",
+    "@yarnpkg/core": "^2.3.0",
+    "clipanion": "^2.6.2",
+    "micromatch": "^4.0.2",
+    "typescript": "4.1.0-beta"
+  },
+  "scripts": {
+    "build": "builder build plugin"
+  }
+}
