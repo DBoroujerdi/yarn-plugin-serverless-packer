@@ -34,3 +34,9 @@ yarn packageLambda --out lambda.zip --src-dir dist/
 ```
 yarn packageLambda --deps-only --out layer.zip
 ```
+
+5. Use with yarn workspaces
+
+```
+yarn workspace child-package run packageLambda
+```
