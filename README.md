@@ -5,7 +5,7 @@ Yarn 2 plugin for generating lambda zip archives from yarn 2  projects
 ## Getting Started
 
 ```
-yarn plugin import https://github.com/DBoroujerdi/yarn-plugin-serverless-packer/releases/download/0.0.1/plugin-serverless-packer.js
+yarn plugin import https://github.com/DBoroujerdi/yarn-plugin-serverless-packer/releases/download/0.0.2/plugin-serverless-packer.js
 ```
 
 ## Examples
