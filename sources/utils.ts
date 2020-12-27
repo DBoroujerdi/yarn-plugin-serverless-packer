@@ -19,6 +19,7 @@ import {
   npath
 } from "@yarnpkg/fslib";
 import mm from "micromatch";
+import {UsageError} from "clipanion";
 
 const ALWAYS_IGNORE = [
   `/package.tgz`,
@@ -171,31 +172,62 @@ export async function addPackagesToZip(outputZip: ZipFS, workspace: Workspace, p
 
     const fetchResult = await fetcher.fetch(pkg, fetcherOptions);
 
-    const pkgRoot = fetchResult.localPath || PortablePath.root;
-
-    const collected = await walkFs(fetchResult.packageFs, pkgRoot);
-
-    const pkgFileSystem = fetchResult.packageFs;
-
-    if (!(await pkgFileSystem.getRealPath()).endsWith(".zip")) {
-      // TODO handle non zip workspace packages
-      continue;
-    }
-
     report.reportInfo(null, `${pkg.name}:${pkg.reference}`);
     report.reportJson({dependency: pkg.name, ref: pkg.reference});
 
-    for (const file of collected) {
-      const stat = await pkgFileSystem.lstatPromise(file);
+    const pkgFileSystem = fetchResult.packageFs;
+    const pkgPath = await pkgFileSystem.getRealPath();
 
-      if (stat.isDirectory()) {
-        await outputZip.mkdirpPromise(file);
-      } else {
-        const buffer = await pkgFileSystem.readFilePromise(file);
-        await outputZip.writeFilePromise(file, buffer);
+    if (!pkgPath.endsWith(".zip")) {
+      const pkgWorkspace = project.workspaces.find(w => w.manifest.name.name === pkg.name);
+
+      if (!pkgWorkspace)
+        throw new UsageError(`${pkg.name} workspace not found, have you configured yarn workspaces correctly?`);
+
+      const rawManifest = pkgWorkspace.manifest.raw
+
+      if (!rawManifest.directories)
+        throw new UsageError(`"directories" not defined for workspace ${pkg.name}`);
+
+      if (!rawManifest.directories.lib)
+        throw new UsageError(`"directories.lib" not defined for workspace ${pkg.name}`);
+
+      const collected = await walkFs(fetchResult.packageFs, rawManifest.directories.lib);
+      const outputZipLibPath = ppath.join("node_modules" as PortablePath, pkg.name as PortablePath);
+
+      console.log("1")
+      await outputZip.mkdirpPromise(outputZipLibPath);
+      console.log("2")
+      for (const file of collected) {
+        const stat = await pkgFileSystem.lstatPromise(file);
+        const outFile = ppath.join(outputZipLibPath, file);
+
+        if (stat.isDirectory()) {
+          await outputZip.mkdirpPromise(outFile);
+        } else {
+          const buffer = await pkgFileSystem.readFilePromise(file);
+          await outputZip.writeFilePromise(outFile, buffer);
+        }
+
+        await outputZip.utimesPromise(outFile, stat.atime, stat.mtime);
       }
+    } else {
 
-      await outputZip.utimesPromise(file, stat.atime, stat.mtime);
+      const pkgRoot = fetchResult.localPath || PortablePath.root;
+      const collected = await walkFs(fetchResult.packageFs, pkgRoot);
+
+      for (const file of collected) {
+        const stat = await pkgFileSystem.lstatPromise(file);
+
+        if (stat.isDirectory()) {
+          await outputZip.mkdirpPromise(file);
+        } else {
+          const buffer = await pkgFileSystem.readFilePromise(file);
+          await outputZip.writeFilePromise(file, buffer);
+        }
+
+        await outputZip.utimesPromise(file, stat.atime, stat.mtime);
+      }
     }
   }
 }

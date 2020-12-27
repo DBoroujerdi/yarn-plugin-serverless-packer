@@ -18,8 +18,6 @@ export default class PackageLambdaCommand extends Command<CommandContext> {
   @Command.Boolean('--deps-only', {description: "Only package dependencies"})
   depsOnly = false;
 
-  // @Command.Boolean('--ignore-mtime', {description: ""})
-
   @Command.Boolean('--json', {description: `Format the output as an NDJSON stream`})
   json: boolean = false;
 
