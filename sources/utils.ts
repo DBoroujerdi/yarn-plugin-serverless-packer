@@ -155,7 +155,11 @@ export async function addPackagesToZip(outputZip: ZipFS, workspace: Workspace, p
     if (!foundPkg)
       throw new Error(`Unable to find package ${descriptor.name}`);
 
-    walk(foundPkg);
+    if (descriptor.range.startsWith("workspace")) {
+      depLocatorHashes.add(foundPkg.locatorHash);
+    } else {
+      walk(foundPkg);
+    }
   }
 
   const fetcher = configuration.makeFetcher();
