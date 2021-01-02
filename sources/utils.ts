@@ -196,24 +196,22 @@ export async function addPackagesToZip(outputZip: ZipFS, workspace: Workspace, p
       if (!rawManifest.directories.lib)
         throw new UsageError(`"directories.lib" not defined for workspace ${pkg.name}`);
 
-      const collected = await walkFs(fetchResult.packageFs, rawManifest.directories.lib);
       const outputZipLibPath = ppath.join("node_modules" as PortablePath, pkg.name as PortablePath);
-
-      console.log("1")
       await outputZip.mkdirpPromise(outputZipLibPath);
-      console.log("2")
-      for (const file of collected) {
-        const stat = await pkgFileSystem.lstatPromise(file);
-        const outFile = ppath.join(outputZipLibPath, file);
+
+      for await (let entry of fetchResult.packageFs.genTraversePromise(ppath.join(pkgPath, rawManifest.directories.lib), {stableSort: true})) {
+        const relativeEntry = ppath.relative(ppath.join(pkgPath, rawManifest.directories.lib), entry);
+        const stat = await pkgFileSystem.lstatPromise(entry);
+        const outEntryFile = ppath.join(outputZipLibPath,  relativeEntry)
 
         if (stat.isDirectory()) {
-          await outputZip.mkdirpPromise(outFile);
+          await outputZip.mkdirpPromise(outEntryFile);
         } else {
-          const buffer = await pkgFileSystem.readFilePromise(file);
-          await outputZip.writeFilePromise(outFile, buffer);
+          const buffer = await pkgFileSystem.readFilePromise(entry);
+          await outputZip.writeFilePromise(outEntryFile, buffer);
         }
 
-        await outputZip.utimesPromise(outFile, stat.atime, stat.mtime);
+        await outputZip.utimesPromise(outEntryFile, stat.atime, stat.mtime);
       }
     } else {
 
