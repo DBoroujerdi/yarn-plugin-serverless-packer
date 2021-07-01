@@ -4,8 +4,10 @@ import {Filename, ppath, ZipFS, statUtils} from "@yarnpkg/fslib";
 import {WorkspaceRequiredError} from "@yarnpkg/cli";
 import {Command, Usage} from "clipanion";
 
-import {addFilesToZip, getLambdaSrcFiles, addPackagesToZip} from "../utils";
 import fileHash from "../fileHash";
+import getLambdaSrcFiles from "../getLambdaSrcFiles";
+import addFilesToZip from "../zip/addFilesToZip";
+import addPackagesToZip from "../zip/addPackagesToZip";
 
 export default class PackageLambdaCommand extends Command<CommandContext> {
 
