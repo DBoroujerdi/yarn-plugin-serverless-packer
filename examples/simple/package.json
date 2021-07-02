@@ -1,0 +1,13 @@
+{
+  "name": "simple",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "import-plugin": "yarn plugin import ../../bundles/@yarnpkg/plugin-serverless-packer.js",
+    "package": "yarn packageLambda --out output.zip"
+  },
+  "dependencies": {
+    "cowsay": "^1.5.0"
+  }
+}
